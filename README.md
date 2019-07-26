@@ -33,6 +33,9 @@ G^*,F^*=\arg\min_{G,F}\max_{D_X,D_Y}\mathcal{L}(G, F, D_X, D_Y)">
 ## Usage
 ### Training
 ```
+$ bash download_dataset.sh [dataset name]
+# dataset name is available following list:
+# apple2orange, summer2winter_yosemite, horse2zebra, monet2photo, cezanne2photo, ukiyoe2photo, vangogh2photo, maps, cityscapes, facades, iphone2dslr_flower, ae_photos
 $ pip install -r requirements.txt 
 $ python main.py train [--dataset]
 # training log saved at ./samples/fake_images-[epoch].png
