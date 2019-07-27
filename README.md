@@ -4,7 +4,10 @@ CycleGANのpytorch実装
 
 ### CycleGAN
 [papaer link](https://arxiv.org/abs/1703.10593)
-- Generaterを2つ使用することで，異なるペア画像でスタイル変換が行えるようになる
+- スタイル変換を行うGAN
+- トレーニングデータは完全に対応するペア画像じゃなくても，ドメインの対応さえあっていればよい
+- Generator, Discriminatorを各2つもつ
+
 #### Loss
 2つのドメイン間のマッピング関数
 <img src="https://latex.codecogs.com/gif.latex?G:X&space;\rightarrow&space;Y,&space;F:Y&space;\rightarrow&space;X">
@@ -39,10 +42,3 @@ $ pip install -r requirements.txt
 $ python main.py train [--dataset]
 # training log saved at ./samples/fake_images-[epoch].png
 ```
-
-### Generate
-```
-$ python main.py generate [--dataset]
-# saved at ./samples/fake_images_%y%m%d%H%M%S.png
-```
-##
