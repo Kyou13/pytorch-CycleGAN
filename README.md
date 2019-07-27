@@ -16,8 +16,7 @@ CycleGANのpytorch実装
 <img src="https://latex.codecogs.com/gif.latex?{\mathcal{L}_{cyc}(G,&space;F)&space;=&space;\mathbb{E}_{x&space;\sim&space;p_{data}(x)}||F(G(x))&space;-&space;x||_1&space;&plus;&space;\mathbb{E}_{y&space;\sim&space;p_{data}(y)}||G(F(y))&space;-&space;y||_1&space;}">
 - Full Objective
   - Adversarial LossとCycle Consistency Lossを合わせた最終的なロス
-<img src="\mathcal{L}(G, F, D_X, D_Y) = \mathcal{L}_{GAN}(G, D_Y, X, Y) + \mathcal{L}_{GAN}(F, D_X, Y, X) + \lambda \mathcal{L}_{cyc}(G, F)\\
-G^*,F^*=\arg\min_{G,F}\max_{D_X,D_Y}\mathcal{L}(G, F, D_X, D_Y)">
+<img src="https://latex.codecogs.com/gif.latex?\mathcal{L}(G,&space;F,&space;D_X,&space;D_Y)&space;=&space;\mathcal{L}_{GAN}(G,&space;D_Y,&space;X,&space;Y)&space;&plus;&space;\mathcal{L}_{GAN}(F,&space;D_X,&space;Y,&space;X)&space;&plus;&space;\lambda&space;\mathcal{L}_{cyc}(G,&space;F)">
 
 
 ## Example
