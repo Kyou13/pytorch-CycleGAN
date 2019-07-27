@@ -10,7 +10,8 @@ from torchvision import transforms
 from torchvision.utils import save_image
 from src import models, utils
 import matplotlib.pyplot as plt
-from datasets import ImageDataset
+from src.datasets import ImageDataset
+from PIL import Image
 
 params = {
     'seed': 123456789,
@@ -21,9 +22,10 @@ params = {
     'beta1': 0.5,
     'beta2': 0.999,
     'wd': 0,
-    'imageHeight': 256,
-    'imageWidth': 256,
+    'img_height': 256,
+    'img_width': 256,
     'channels': 3,
+    'decay_epoch': 100,
     'sample_interval': 100,
     'checkpoint_interval': 10,
     'n_residual_blocks':9,
@@ -53,7 +55,7 @@ def train(dataset):
 
   transforms_ = [
       transforms.Resize(int(params['img_height'] * 1.12), Image.BICUBIC),
-      transforms.RandomCrop((params['img_height','img_width'])),
+      transforms.RandomCrop((params['img_height'], params['img_width'])),
       transforms.RandomHorizontalFlip(),
       transforms.ToTensor(),
       transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
@@ -83,8 +85,10 @@ def train(dataset):
   G_AB = G_AB.to(device)
   G_BA = G_BA.to(device)
 
-  D.apply(utils.weights_init)
-  G.apply(utils.weights_init)
+  D_A.apply(utils.weights_init)
+  D_B.apply(utils.weights_init)
+  G_AB.apply(utils.weights_init)
+  G_BA.apply(utils.weights_init)
 
   # Losses
   # TODO: cuda必要？
@@ -112,18 +116,19 @@ def train(dataset):
       , lr_lambda=utils.LambdaLR(params['epochs'], decay_start_epoch=params['decay_epoch']).step
   )
   # Buffers of previously generated samples
-  fake_A_buffer = ReplayBuffer()
-  fake_B_buffer = ReplayBuffer()
+  fake_A_buffer = utils.ReplayBuffer()
+  fake_B_buffer = utils.ReplayBuffer()
 
-  def sample_images(batches_done):
+  def sample_images(epochs):
       """Saves a generated sample from the test set"""
       imgs = next(iter(val_dataloader))
       G_AB.eval()
       G_BA.eval()
-      real_A = Variable(imgs["A"].type(Tensor))
-      fake_B = G_AB(real_A)
-      real_B = Variable(imgs["B"].type(Tensor))
-      fake_A = G_BA(real_B)
+      with torch.no_grad():
+        real_A = imgs["A"].to(device)
+        fake_B = G_AB(real_A)
+        real_B = imgs["B"].to(device)
+        fake_A = G_BA(real_B)
       # Arange images along x-axis
       real_A = make_grid(real_A, nrow=5, normalize=True)
       real_B = make_grid(real_B, nrow=5, normalize=True)
@@ -131,10 +136,10 @@ def train(dataset):
       fake_B = make_grid(fake_B, nrow=5, normalize=True)
       # Arange images along y-axis
       image_grid = torch.cat((real_A, fake_B, real_B, fake_A), 1)
-      save_image(image_grid, "images/%s/%s.png" % (opt.dataset_name, batches_done), normalize=False)
+      save_image(image_grid, os.path.join(samples_dir,"fake_images-%s.png" % (epochs)), normalize=False)
 
-  d_losses = []
-  g_losses = []
+  losses_D = []
+  losses_G = []
   total_step = len(data_loader)
   for epoch in range(params['epochs']):
     for i, images in enumerate(data_loader):
@@ -143,9 +148,9 @@ def train(dataset):
 
       b_size = real_A.size(0)
 
-      # TODO: require_grad, G.train()
-      real_labels = torch.ones((b_size, *D_A.output_shape)).to(device)
-      fake_labels = torch.zeros((b_size, *D_A.output_shape)).to(device)
+      # TODO: require_grad, G.train(), 自動化できないか
+      real_labels = torch.ones((b_size, 1, 16, 16)).to(device)
+      fake_labels = torch.zeros((b_size, 1, 16, 16)).to(device)
 
       # Train Generator
       optimizer_G.zero_grad()
@@ -186,7 +191,7 @@ def train(dataset):
       optimizer_D_B.zero_grad()
 
       loss_real_B = criterion_GAN(D_B(real_B), real_labels)
-      fake_A_ = fake_A_buffer.push_and_pop(fake_B)
+      fake_B_ = fake_A_buffer.push_and_pop(fake_B)
       loss_fake_B = criterion_GAN(D_B(fake_B_.detach()), fake_labels)
       loss_D_B = (loss_real_B + loss_fake_B) / 2
       loss_D_B.backward()
@@ -202,17 +207,17 @@ def train(dataset):
 
       losses_G.append(loss_G.item())
       losses_D.append(loss_D.item())
+
     if epoch % params['checkpoint_interval'] == 0:
       torch.save(G_AB.state_dict(), os.path.join(weights_dir, 'G_AB.ckpt'))
       torch.save(G_BA.state_dict(), os.path.join(weights_dir, 'G_BA.ckpt'))
       torch.save(D_A.state_dict(), os.path.join(weights_dir, 'D_A.ckpt'))
       torch.save(D_B.state_dict(), os.path.join(weights_dir, 'D_B.ckpt'))
 
-#     if (epoch + 1) == 1:
-#       save_image(utils.denorm(images), os.path.join(
-#           sample_dir, 'real_images.png'))
-#     save_image(utils.denorm(fake_images), os.path.join(
-#         sample_dir, 'fake_images-{}.png'.format(epoch + 1)))
+    if (epoch + 1) == 1:
+      save_image(utils.denorm(images), os.path.join(
+          sample_dir, 'real_images.png'))
+    sample_images(epoch + 1)
 
 
   plt.figure(figsize=(10, 5))
