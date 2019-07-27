@@ -5,9 +5,8 @@ import random
 import time
 import datetime
 import sys
-
-from torch.autograd import Variable
 import numpy as np
+import itertools
 
 
 def get_optim(params, target):
@@ -79,11 +78,11 @@ class ReplayBuffer:
                     self.data[i] = element
                 else:
                     to_return.append(element)
-        return Variable(torch.cat(to_return))
+        return torch.cat(to_return)
 
 
 class LambdaLR:
-    def __init__(self, n_epochs, offset=0, decay_start_epoch):
+    def __init__(self, n_epochs, decay_start_epoch, offset=0):
         assert (n_epochs - decay_start_epoch) > 0, "Decay must start before the training session ends!"
         self.n_epochs = n_epochs
         self.offset = offset

@@ -12,7 +12,7 @@ class ResidualBlock(nn.Module):
         nn.ReLU(inplace=True),
         nn.ReflectionPad2d(1),
         nn.Conv2d(in_features, in_features, 3),
-        nn.InstanceNorm2d(in_features)
+        nn.InstanceNorm2d(in_features),
     )
 
   def forward(self, x):
@@ -20,12 +20,12 @@ class ResidualBlock(nn.Module):
 
 
 class Generator(nn.Module):
-  def __init__(self, nc, num_residual_blocks):
+  def __init__(self, channels, num_residual_blocks):
     super(Generator, self).__init__()
     out_features = 64
     model = [
-        nn.ReflectionPad2d(nc),
-        nn.Conv2d(nc, out_feature, 7),
+        nn.ReflectionPad2d(channels),
+        nn.Conv2d(channels, out_features, 7),
         nn.InstanceNorm2d(out_features),
         nn.ReLU(inplace=True)
     ]
@@ -42,12 +42,12 @@ class Generator(nn.Module):
 
     # Reidual blocks
     for _ in range(num_residual_blocks):
-      model += [ResidualBlock(out_features)
+      model += [ResidualBlock(out_features)]
 
     for _ in range(2):
       out_features //= 2
       model += [
-        nn.Upsample(scle_factor=2),
+        nn.Upsample(scale_factor=2),
         nn.Conv2d(in_features, out_features, 3, stride=1, padding=1),
         nn.InstanceNorm2d(out_features),
         nn.ReLU(inplace=True)
@@ -63,18 +63,18 @@ class Generator(nn.Module):
 
 
 class Discriminator(nn.Module):
-  def __init__(self, nc):
+  def __init__(self, channels):
     super(Discriminator, self).__init__()
 
     def discriminator_block(in_filters, out_filters, normalize=True):
-      layers = [nn.Conv2d(in_filters, out_filters, normalize=True)]
+      layers = [nn.Conv2d(in_filters, out_filters, 4, stride=2, padding=1)]
       if normalize:
         layers.append(nn.InstanceNorm2d(out_filters))
       layers.append(nn.LeakyReLU(0.2, inplace=True))
       return layers
 
     self.model = nn.Sequential(
-        *discriminator_block(nc, 64, normalize=False),
+        *discriminator_block(channels, 64, normalize=False),
         *discriminator_block(64, 128),
         *discriminator_block(128, 256),
         *discriminator_block(256, 512),
