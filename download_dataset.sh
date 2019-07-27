@@ -9,7 +9,7 @@ fi
 
 URL=https://people.eecs.berkeley.edu/~taesung_park/CycleGAN/datasets/$FILE.zip
 ZIP_FILE=./$FILE.zip
-TARGET_DIR=./$FILE
+TARGET_DIR=./data/$FILE
 wget -N $URL -O $ZIP_FILE
 unzip $ZIP_FILE -d .
 rm $ZIP_FILE
