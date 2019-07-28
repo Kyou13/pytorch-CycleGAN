@@ -121,7 +121,7 @@ def train(dataset):
 
   def sample_images(epochs):
       """Saves a generated sample from the test set"""
-      imgs = next(iter(val_dataloader))
+      imgs = next(iter(val_data_loader))
       G_AB.eval()
       G_BA.eval()
       with torch.no_grad():
@@ -160,7 +160,6 @@ def train(dataset):
       loss_GAN_AB = criterion_GAN(D_B(fake_B), real_labels)
       fake_A = G_BA(real_B)
       loss_GAN_BA = criterion_GAN(D_A(fake_A), real_labels)
-      
       loss_GAN = (loss_GAN_AB + loss_GAN_BA) / 2
 
       # Cycle loss
