@@ -52,10 +52,9 @@ def train(dataset):
   os.makedirs(sample_dir, exist_ok=True)
   os.makedirs(weights_dir, exist_ok=True)
 
-
   transforms_ = [
-      transforms.Resize(int(params['img_height'] * 1.12), Image.BICUBIC),
-      transforms.RandomCrop((params['img_height'], params['img_width'])),
+      transforms.Resize(int(params['img_height'] * 1.12), Image.BICUBIC),  # 短い方の辺をsizeにする, 比率はそのまま
+      transforms.RandomCrop((params['img_height'],['img_width'])),
       transforms.RandomHorizontalFlip(),
       transforms.ToTensor(),
       transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
@@ -85,18 +84,19 @@ def train(dataset):
   G_AB = G_AB.to(device)
   G_BA = G_BA.to(device)
 
+  # initialize models parameters
   D_A.apply(utils.weights_init)
   D_B.apply(utils.weights_init)
   G_AB.apply(utils.weights_init)
   G_BA.apply(utils.weights_init)
 
   # Losses
-  # TODO: cuda必要？
   criterion_GAN = nn.MSELoss()
   criterion_cycle = nn.L1Loss()
   criterion_identity = nn.L1Loss()
 
   # Optimizer
+  # Generatorは同時に最適化を行う
   optimizer_G = utils.get_optim(
       params,
       itertools.chain(G_AB.parameters(),G_BA.parameters()), 
@@ -104,7 +104,7 @@ def train(dataset):
   optimizer_D_A = utils.get_optim(params, D_A)
   optimizer_D_B = utils.get_optim(params, D_B)
 
-  # schedulers
+  # learning rate schedulers
   lr_scheduler_G = torch.optim.lr_scheduler.LambdaLR(
       optimizer_G, lr_lambda=utils.LambdaLR(params['epochs'], decay_start_epoch=params['decay_epoch']).step
   )
@@ -214,9 +214,9 @@ def train(dataset):
       torch.save(D_A.state_dict(), os.path.join(weights_dir, 'D_A.ckpt'))
       torch.save(D_B.state_dict(), os.path.join(weights_dir, 'D_B.ckpt'))
 
-    if (epoch + 1) == 1:
-      save_image(utils.denorm(images), os.path.join(
-          sample_dir, 'real_images.png'))
+    # if (epoch + 1) == 1:
+    #   save_image(utils.denorm(images), os.path.join(
+    #       sample_dir, 'real_images.png'))
     sample_images(epoch + 1)
 
 

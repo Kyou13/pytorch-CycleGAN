@@ -38,6 +38,7 @@ CycleGANのpytorch実装
 $ bash download_dataset.sh [dataset name]
 # dataset name is available following list:
 # apple2orange, summer2winter_yosemite, horse2zebra, monet2photo, cezanne2photo, ukiyoe2photo, vangogh2photo, maps, cityscapes, facades, iphone2dslr_flower, ae_photos
+
 $ pip install -r requirements.txt 
 $ python main.py train [--dataset]
 # training log saved at ./samples/fake_images-[epoch].png

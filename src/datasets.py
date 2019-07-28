@@ -8,6 +8,9 @@ import torchvision.transforms as transforms
 
 
 def to_rgb(image):
+    """
+    RGBにする
+    """
     rgb_image = Image.new("RGB", image.size)
     rgb_image.paste(image)
     return rgb_image
@@ -15,6 +18,10 @@ def to_rgb(image):
 
 class ImageDataset(Dataset):
     def __init__(self, root, transforms_=None, unaligned=False, mode="train"):
+        """
+        unaligned: bool
+          対応するペアで取得するかどうか
+        """
         self.transform = transforms.Compose(transforms_)
         self.unaligned = unaligned
 
